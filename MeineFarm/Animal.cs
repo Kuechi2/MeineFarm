@@ -1,10 +1,9 @@
-﻿using System.Runtime.CompilerServices;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 /*
 if (weide == null ) 
@@ -23,7 +22,7 @@ namespace MeineFarm
         {
             Image Bubble = new();
             Label Text = new();
-            DispatcherTimer dispatcherTimer = new DispatcherTimer();
+            DispatcherTimer BubbleTimeoutTimer = new DispatcherTimer();
             Animal Outer;
             public Speaking(Animal outer)
             {
@@ -38,25 +37,42 @@ namespace MeineFarm
                 SetLeft(Text, 10);
                 SetTop(Text, 3);
                 Outer.Weide.Children.Add(this);
-                Canvas.SetLeft(this, outer.Position.X+25);
-                Canvas.SetTop(this, outer.Position.Y-15);
-                dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-                dispatcherTimer.Interval = TimeSpan.FromSeconds(2);
-                dispatcherTimer.Start();
+                Canvas.SetLeft(this, outer.Position.X + 25);
+                Canvas.SetTop(this, outer.Position.Y - 15);
+                BubbleTimeoutTimer.Tick += dispatcherTimer_Tick;
+                BubbleTimeoutTimer.Interval = TimeSpan.FromSeconds(2);
+                BubbleTimeoutTimer.Start();
             }
             private void dispatcherTimer_Tick(object? sender, EventArgs e)
             {
                 Outer.Weide.Children.Remove(this);
-                dispatcherTimer.Stop();
+                BubbleTimeoutTimer.Stop();
             }
 
         }
-        public string Name {get; set; }
-        public int Age {get; set; }
+        public string Name { get; set; }
+        public double Speed { get; set; }
+        public int Age { get; set; }
         internal string SoundFile;
         internal Image AnimalImage = new();
-        internal Point Position = new(0,0);
+        internal Point Position = new(0, 0);
         internal Canvas Weide;
+        private Vector moveDirection = new();
+        private Point movePoint = new();
+
+        DispatcherTimer AniTimer = new();
+        public Point MovePoint 
+        { 
+            get 
+            { 
+                return movePoint; 
+            } 
+            set 
+            { 
+                moveDirection = GetDirection(value); 
+                movePoint = value; 
+            } 
+        } 
         public Animal(string name, int age, string soundfile, string graphfile, Canvas weide, Point position)
         {
             Name = name;
@@ -69,6 +85,22 @@ namespace MeineFarm
             Canvas.SetLeft(AnimalImage, Position.X);
             Canvas.SetTop(AnimalImage, Position.Y);
             AnimalImage.MouseEnter += Greet;
+            AnimalImage.MouseDown += Klicked;
+            AniTimer.Interval = TimeSpan.FromMilliseconds(15);
+            AniTimer.Tick += AnimationStep;
+        }
+
+        private void AnimationStep(object? sender, EventArgs e)
+        {
+            Position += moveDirection;
+            if (Math.Abs(Position.X - MovePoint.X) < Speed &&
+                Math.Abs(Position.Y - MovePoint.Y) < Speed)
+            {
+                AniTimer.Stop();
+                moveDirection = new(0, 0);
+            }
+            Canvas.SetLeft(AnimalImage, Position.X);
+            Canvas.SetTop(AnimalImage, Position.Y);
         }
 
         private void PlaceAt(Point? position = null)
@@ -77,14 +109,42 @@ namespace MeineFarm
             Canvas.SetLeft(AnimalImage, Position.X);
             Canvas.SetTop(AnimalImage, Position.Y);
         }
-
+        private Vector GetDirection(Point position)
+        {
+            Vector direction = new Vector((position.X-Position.X), (position.Y-Position.Y));
+            direction.Normalize();
+            direction *= Speed;
+            return direction;
+        }
+        public void UpdatePosition()
+        {
+            AniTimer.Start();
+        }
         public void Greet(object sender, MouseEventArgs e)
         {
             MediaPlayer AnimalSound = new();
             AnimalSound.Open(new(SoundFile));
             AnimalSound.Play();
             Speaking s = new(this);
-            MessageBox.Show(sender.ToString());
+        }        
+        public void Klicked(object sender, MouseEventArgs e)
+        {
+            MessageBox.Show("Tier geklickt. Klick es auf die Klicker, damit es jault!!!","HrHrHr!!!");
+        }
+        public static string[] GetDerivedClasses()
+        {
+            List<string> children = new List<string>();
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (typeof(Animal).IsAssignableFrom(type) && type != typeof(Animal))
+                    {
+                        children.Add(type.Name);
+                    }
+                }
+            }
+            return children.ToArray();
         }
     }
     class Dog : Animal

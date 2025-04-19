@@ -12,16 +12,26 @@
             <ColumnDefinition Width="77*"/>
             <ColumnDefinition Width="180"/>
         </Grid.ColumnDefinitions>
-        <Button Content="Tier erzeugen" HorizontalAlignment="Center" Margin="0,54,0,0" VerticalAlignment="Top" Click="NewAnimal" Grid.Column="1"/>
-        <Button Content="Grüsse" HorizontalAlignment="Center" Margin="0,79,0,0" VerticalAlignment="Top" Click="Gruesse" Grid.Column="1" Width="76"/>
-        <DataGrid x:Name="TierListe" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,240,0,0" Grid.Column="1"/>
-        <Canvas x:Name="Weide">
+        <Canvas x:Name="Weide" MouseDown="Weide_MouseDown">
             <Canvas.Background>
                 <ImageBrush ImageSource="/wiese.jpg"/>
             </Canvas.Background>
         </Canvas>
-        <Button Grid.Column="1" Content="create" HorizontalAlignment="Center" Margin="0,171,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-        <Button Grid.Column="1" Content="animate" HorizontalAlignment="Left" Margin="72,197,0,0" VerticalAlignment="Top" Click="Ani"/>
+        <StackPanel Grid.Column="1" Background="#FFC1DA5A">
+            <Label Content="Name:"/>
+            <TextBox x:Name="TName" Grid.Column="1" TextWrapping="Wrap" Text="Tonya"/>
+            <Label Content="Alter"/>
+            <TextBox x:Name="TAge" Grid.Column="1" TextWrapping="Wrap" Text="5"/>
+            <Label Content="Tierart"/>
+            <ComboBox x:Name="TType"/>
+            <Button Content="Tier erzeugen" HorizontalAlignment="Center" VerticalAlignment="Top" Click="NewAnimal" Grid.Column="1"/>
+            <Button Content="Grüsse" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Gruesse" Grid.Column="1" Width="76"/>
+            <DataGrid x:Name="TierListe" Grid.Column="1" Height="130
+                      "/>
+            <Button Grid.Column="1" Content="create" HorizontalAlignment="left" VerticalAlignment="Top" Click="Button_Click"/>
+            <Button Grid.Column="1" Content="animate" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Ani"/>
+
+        </StackPanel>
 
     </Grid>
 </Window>

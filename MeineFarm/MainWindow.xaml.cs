@@ -10,23 +10,42 @@ namespace MeineFarm
     public partial class MainWindow : Window
     {
         AniImage AniCat;
+        Point NewPosition = new();
         List<Animal> animalList = new();
+
+        Border InsertFrame = new Border();
         public MainWindow()
         {
             InitializeComponent();
+            TType.ItemsSource = Animal.GetDerivedClasses();
         }
 
         private void NewAnimal(object sender, RoutedEventArgs e)
         {
-            Dog Tier1 = new("Hasso", 3, Weide, new(0,0));
-            animalList.Add(Tier1);
-
-            animalList.Add((Dog)new("Bello", 2, Weide, new(0, 90)));
-            animalList.Add((Cat)new("Minka", 5, Weide, new(0, 180)));
-            animalList.Add((Cat)new("Mautz", 1, Weide, new(0, 270)));
-
+            if (!int.TryParse(TAge.Text, out int age))
+            {
+                MessageBox.Show("Alter muss ein Zahlenwert sein", "Du Spunk!");
+                TAge.Focus();
+                TAge.SelectAll();
+                return;
+            }
+            if (TType.SelectedValue == null)
+            {
+                MessageBox.Show("Du must eine Tierart auswählen", "Du Spust!");
+                TType.Focus();
+                TType.IsDropDownOpen = true;
+                return;
+            }
+            if(!Weide.Children.Contains(InsertFrame))
+            {
+                MessageBox.Show("Klicke auf die Weide, um dem Tier ein Plätzchen zuzuweisen", "Du Honk!");
+                return;
+            }
+            if(TType.SelectedItem.ToString() == "Cat") animalList.Add((Cat)new(TName.Text, age, Weide, NewPosition));
+            if(TType.SelectedItem.ToString() == "Dog") animalList.Add((Dog)new(TName.Text, age, Weide, NewPosition));
             TierListe.ItemsSource = animalList;
             TierListe.Items.Refresh();
+            Weide.Children.Remove(InsertFrame);
         }
 
         private void Gruesse(object sender, RoutedEventArgs e)
@@ -47,7 +66,31 @@ namespace MeineFarm
 
         private void Ani(object sender, RoutedEventArgs e)
         {
-            AniCat.NextFrame();
+            foreach(Animal animal in animalList)
+            animal.UpdatePosition();
+        }
+
+        private void Weide_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            NewPosition = e.GetPosition(this);
+            InsertFrame.BorderBrush = Brushes.Green;
+            InsertFrame.BorderThickness = new Thickness(2);
+            InsertFrame.Width = 50;
+            InsertFrame.Height = 80;
+            Weide.Children.Remove(InsertFrame);
+            var s = sender as Canvas;
+            if (s != null) s.Children.Add(InsertFrame);
+            Canvas.SetLeft(InsertFrame, NewPosition.X);
+            Canvas.SetTop(InsertFrame, NewPosition.Y);
+            if(TierListe.SelectedItem != null)
+            {
+                Animal animal = animalList[TierListe.SelectedIndex];
+                animal.Speed = 10;
+                animal.MovePoint = NewPosition;
+                TierListe.ItemsSource = null;
+                TierListe.ItemsSource = animalList;
+                TierListe.UpdateLayout();
+            }
         }
     }
 }
