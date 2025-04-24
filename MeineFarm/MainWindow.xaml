@@ -24,12 +24,13 @@
             <TextBox x:Name="TAge" Grid.Column="1" TextWrapping="Wrap" Text="5"/>
             <Label Content="Tierart"/>
             <ComboBox x:Name="TType"/>
+            <Slider x:Name="ASpeed"  Minimum="1" Maximum="50" Height="24"/>
             <Button Content="Tier erzeugen" HorizontalAlignment="Center" VerticalAlignment="Top" Click="NewAnimal" Grid.Column="1"/>
             <Button Content="Grüsse" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Gruesse" Grid.Column="1" Width="76"/>
             <DataGrid x:Name="TierListe" Grid.Column="1" Height="130
-                      "/>
+                      " SelectionChanged="TierListe_SelectionChanged"/>
             <Button Grid.Column="1" Content="create" HorizontalAlignment="left" VerticalAlignment="Top" Click="Button_Click"/>
-            <Button Grid.Column="1" Content="animate" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Ani"/>
+            <Button Grid.Column="1" Content="animate" HorizontalAlignment="Left" VerticalAlignment="Top" Click="DeleteAnimal"/>
 
         </StackPanel>
 
