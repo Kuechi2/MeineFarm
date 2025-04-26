@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MeineFarm"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800
+        Title="My Farm" Height="450" Width="800
         ">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -25,12 +25,14 @@
             <Label Content="Tierart"/>
             <ComboBox x:Name="TType"/>
             <Slider x:Name="ASpeed"  Minimum="1" Maximum="50" Height="24"/>
-            <Button Content="Tier erzeugen" HorizontalAlignment="Center" VerticalAlignment="Top" Click="NewAnimal" Grid.Column="1"/>
-            <Button Content="Grüsse" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Gruesse" Grid.Column="1" Width="76"/>
+            <Button Content="Tier erzeugen" Click="NewAnimal" Grid.Column="1"/>
+            <Button Content="Grüsse" Click="Gruesse"/>
             <DataGrid x:Name="TierListe" Grid.Column="1" Height="130
                       " SelectionChanged="TierListe_SelectionChanged"/>
-            <Button Grid.Column="1" Content="create" HorizontalAlignment="left" VerticalAlignment="Top" Click="Button_Click"/>
-            <Button Grid.Column="1" Content="animate" HorizontalAlignment="Left" VerticalAlignment="Top" Click="DeleteAnimal"/>
+            <Button Content="Load" Click="Load_Click"/>
+            <Button Content="Save" Click="Save_Click"/>
+            <Button Content="Delete" Click="DeleteAnimal"/>
+            <Button Content="Button" Click="Button_Click_1"/>
 
         </StackPanel>
 

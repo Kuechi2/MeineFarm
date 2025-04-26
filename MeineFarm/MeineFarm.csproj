@@ -6,10 +6,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>bin\Debug\net8.0-windows\Media\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="wiese.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="bin\Debug\net8.0-windows\Media\icon.ico" />
   </ItemGroup>
 
   <ItemGroup>

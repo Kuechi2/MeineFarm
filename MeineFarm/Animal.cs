@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -7,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
@@ -15,6 +13,28 @@ namespace MeineFarm
 {
     internal class Animal
     {
+        internal class AniImage : Image
+        {
+            List<ImageSource> Sources = new();
+            int currentFrame = 0;
+            public AniImage(string path)
+            {
+                path = AppContext.BaseDirectory + "\\Media\\" + path ;
+                string[] files = System.IO.Directory.GetFiles(path, "*.png");
+                foreach(string file in files)
+                {
+                    Image frame = new();
+                    frame.Source = new BitmapImage(new Uri(file));
+                    Sources.Add(frame.Source);
+                }
+            }
+            internal ImageSource NextFrame()
+            {
+                currentFrame++;
+                if (currentFrame > Sources.Count - 1) { currentFrame = 0; }
+                return Sources[currentFrame];
+            }
+        }
         private class AnimalData
         {
 #pragma warning disable CS8618 
@@ -38,12 +58,10 @@ namespace MeineFarm
                 {
                     throw new NotSupportedException("No Canvas Weide in MainWindow");
                 }
-                Animal animal = animalData.Type switch
-                {
-                    "Dog" => new Dog(animalData.Name, animalData.Age, Weide, animalData.Position),
-                    "Cat" => new Cat(animalData.Name, animalData.Age, Weide, animalData.Position),
-                    _ => throw new NotSupportedException($"Unknown animal type: {animalData.Type}")
-                };
+                Animal? animal = null;
+                if (animalData.Type == "Dog") animal = new Dog(animalData.Name, animalData.Age, Weide, animalData.Position);
+                if (animalData.Type == "Cat") animal = new Cat(animalData.Name, animalData.Age, Weide, animalData.Position);
+                if(animal==null) throw new NotSupportedException("Unknown Animal Type in SaveFile"); ;
 
                 animal.Speed = animalData.Speed;
                 animal.SoundFile = animalData.SoundFile;
@@ -65,10 +83,6 @@ namespace MeineFarm
                 JsonSerializer.Serialize(writer, animalData, options);
             }
         }
-
-
-
-
 
         private class Speaking : Canvas
         {
@@ -110,7 +124,20 @@ namespace MeineFarm
         public int Age { get; set; }
         internal string SoundFile;
         internal Image AnimalImage = new();
-        public Point Position { get; set; } = new(0, 0);
+        internal Point Position { get; set; } = new(0, 0);
+        public Point MovePoint
+        {
+            get
+            {
+                return movePoint;
+            }
+            set
+            {
+                moveDirection = GetDirection(value);
+                movePoint = value;
+                if (!AniTimer.IsEnabled) AniTimer.Start();
+            }
+        }
         internal Canvas Weide;
         private Vector moveDirection = new();
         private Point movePoint = new();
@@ -129,7 +156,8 @@ namespace MeineFarm
             } 
         }
         private Ellipse SelectIdentifier = new(); 
-        public event EventHandler? SelectedChanged;  //ADDTOBOOK
+        public event EventHandler? SelectedChanged;
+        internal AniImage Animation;
 
 
         public Animal(string name, int age, string soundfile, string graphfile, Canvas weide, Point position)
@@ -138,7 +166,12 @@ namespace MeineFarm
             Age = age;
             SoundFile = soundfile;
             Position = position;
-            AnimalImage.Source = new BitmapImage(GetLoadUri(graphfile));
+
+            Animation = new(graphfile);
+            AnimalImage.Source = Animation.NextFrame();
+            AnimalImage.Width = 80;
+            AnimalImage.Height = 120;
+            //AnimalImage.Source = new BitmapImage(GetLoadUri(graphfile));
             if (Weide == null) Weide = weide;
             Weide.Children.Add(AnimalImage);
             Canvas.SetLeft(AnimalImage, Position.X);
@@ -149,10 +182,12 @@ namespace MeineFarm
             AniTimer.Tick += AnimationStep;
 
             SelectIdentifier.Stroke = Brushes.Red;
-            SelectIdentifier.StrokeThickness = 4;
-            SelectIdentifier.Width = 40;
+            SelectIdentifier.StrokeThickness = 1;
+            SelectIdentifier.Width = 80;
             SelectIdentifier.Height = 60;
+
         }
+        //Save and Load
         public static void SaveFarm(List<Animal> FarmListe)
         {
 
@@ -178,11 +213,6 @@ namespace MeineFarm
             ReturnList = JsonSerializer.Deserialize<List<Animal>>(json, options);
             if(ReturnList == null) return new();    //Wenn Serializenicht 
             return ReturnList;
-
-        }
-        ~Animal()
-        {
-            Weide.Children.Remove(SelectIdentifier);
         }
         private Uri GetLoadUri(string FileName)
         {
@@ -196,20 +226,24 @@ namespace MeineFarm
         }
         private void AnimationStep(object? sender, EventArgs e)
         {
+            //AnimalImage.Source = Animation.NextFrame();
             Position += moveDirection;
+            AnimalImage.Source = Animation.NextFrame();
             if (Math.Abs(Position.X - MovePoint.X) < Speed &&
                 Math.Abs(Position.Y - MovePoint.Y) < Speed)
             {
                 AniTimer.Stop();
+                AnimalImage.RenderTransform = null;
                 Position = MovePoint;
                 moveDirection = new(0, 0);
             }
+            
             Canvas.SetLeft(AnimalImage, Position.X);
             Canvas.SetTop(AnimalImage, Position.Y);
             if (Selected)
             {
                 Canvas.SetLeft(SelectIdentifier, Position.X);
-                Canvas.SetTop(SelectIdentifier, Position.Y);
+                Canvas.SetTop(SelectIdentifier, Position.Y+30);
             }
         }
         private Vector GetDirection(Point position)
@@ -217,6 +251,10 @@ namespace MeineFarm
             Vector direction = new((position.X-Position.X), (position.Y-Position.Y));
             direction.Normalize();
             direction *= Speed;
+            if (direction.X < 0)
+                AnimalImage.RenderTransform = new ScaleTransform(-1, 1, 40, 30);
+            else
+                AnimalImage.RenderTransform = null;
             return direction;
         }
         public void Greet(object sender, RoutedEventArgs e)
@@ -239,7 +277,7 @@ namespace MeineFarm
             {
                 Weide.Children.Add(SelectIdentifier);
                 Canvas.SetLeft(SelectIdentifier, Position.X);
-                Canvas.SetTop(SelectIdentifier, Position.Y);
+                Canvas.SetTop(SelectIdentifier, Position.Y + 30);
             }
             else
             {
@@ -247,19 +285,7 @@ namespace MeineFarm
             }
         }
 
-        public Point MovePoint
-        {
-            get
-            {
-                return movePoint;
-            }
-            set
-            {
-                moveDirection = GetDirection(value);
-                movePoint = value;
-                if (!AniTimer.IsEnabled) AniTimer.Start();
-            }
-        }
+
         public static string[] GetDerivedClasses()
         {
             List<string> children = new List<string>();
@@ -280,7 +306,7 @@ namespace MeineFarm
     {
 
         public Dog(string name, int age, Canvas weide, Point position) : base(name, age,
-            "wauwau.mp3", "Hund.png", weide, position) 
+            "wauwau.mp3", "HundAnimated", weide, position) 
         { 
             
         }
@@ -288,24 +314,9 @@ namespace MeineFarm
     class Cat : Animal
     {
         public Cat(string name, int age, Canvas weide, Point position) : base(name, age,
-            "meow.mp3", "Katze.png", weide, position)
+            "meow.mp3", "KatzeAnimated", weide, position)
         {
 
-        }
-    }
-    internal class AniImage : Image
-    {
-        List<ImageSource> Sources = new();
-        int currentFrame =0;
-        public AniImage(List<ImageSource> sources)
-        {
-            Sources = sources;
-        }
-        public void NextFrame()
-        {
-            currentFrame++;
-            if (currentFrame > Sources.Count-1) { currentFrame=0; }
-            Source = Sources[currentFrame];
         }
     }
 }

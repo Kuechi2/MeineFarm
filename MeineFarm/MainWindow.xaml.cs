@@ -1,10 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace MeineFarm
 {
@@ -26,21 +23,21 @@ namespace MeineFarm
         {
             if (!int.TryParse(TAge.Text, out int age))
             {
-                MessageBox.Show("Alter muss ein Zahlenwert sein", "Du Spunk!");
+                MessageBox.Show("Alter muss ein Zahlenwert sein", "Falsche Altersangabe");
                 TAge.Focus();
                 TAge.SelectAll();
                 return;
             }
             if (TType.SelectedValue == null)
             {
-                MessageBox.Show("Du must eine Tierart auswählen", "Du Spust!");
+                MessageBox.Show("Du must eine Tierart auswählen", "Keine Tierart gewählt");
                 TType.Focus();
                 TType.IsDropDownOpen = true;
                 return;
             }
             if(!Weide.Children.Contains(InsertFrame))
             {
-                MessageBox.Show("Klicke auf die Weide, um dem Tier ein Plätzchen zuzuweisen", "Du Honk!");
+                MessageBox.Show("Klicke auf die Weide, um dem Tier ein Plätzchen zuzuweisen", "Platz auf der Weide anklicken");
                 return;
             }
             if (TType.SelectedItem.ToString() == "Cat")
@@ -76,8 +73,10 @@ namespace MeineFarm
             animalList[TierListe.SelectedIndex].Greet(sender, e);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Load_Click(object sender, RoutedEventArgs e)
         {
+            animalList.Clear();
+            Weide.Children.Clear();
             animalList = Animal.LoadFarm();
             foreach(var animal in animalList)
             {
@@ -86,7 +85,11 @@ namespace MeineFarm
             TierListe.ItemsSource = animalList;
             TierListe.Items.Refresh();
         }
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            Animal.SaveFarm(animalList);
 
+        }
         private void DeleteAnimal(object sender, RoutedEventArgs e)
         {
             List<Animal> StayAlive = [.. animalList];
@@ -105,15 +108,18 @@ namespace MeineFarm
         {
             if (e.OriginalSource != sender) return; //ADDTOBOOK
             NewPosition = e.GetPosition(this);
+            NewPosition.X -= 40;
+            NewPosition.Y -= 30;
             InsertFrame.BorderBrush = Brushes.Green;
             InsertFrame.BorderThickness = new Thickness(2);
-            InsertFrame.Width = 50;
-            InsertFrame.Height = 80;
+            InsertFrame.Width = 80;
+            InsertFrame.Height = 60;
             Weide.Children.Remove(InsertFrame);
             var s = sender as Canvas;
             if (s != null) s.Children.Add(InsertFrame);
             Canvas.SetLeft(InsertFrame, NewPosition.X);
             Canvas.SetTop(InsertFrame, NewPosition.Y);
+            NewPosition.Y -= 30;
             if(TierListe.SelectedItem != null)
             {
                 foreach(Animal ani in TierListe.SelectedItems)
@@ -131,8 +137,14 @@ namespace MeineFarm
             { 
                 if (!SelectedAnimal.Selected)
                     SelectedAnimal.Selected = true; 
-
             }
+        }
+
+
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
